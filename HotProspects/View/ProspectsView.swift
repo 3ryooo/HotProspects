@@ -24,20 +24,32 @@ struct ProspectsView: View {
     @Query(sort: \Prospect.name) var prospects: [Prospect]
     @Environment(\.modelContext) var modelContext
     
+    init(filter: FilterType) {
+        self.filter = filter
+        
+        if filter != .none {
+            let showContactedOnly = filter == .contacted
+            
+            _prospects = Query(filter: #Predicate {
+                $0.isContacted == showContactedOnly
+            }, sort: [SortDescriptor(\Prospect.name)])
+        }
+    }
+    
     enum FilterType {
         case none, contacted, uncontacted
     }
     
     var body: some View {
         NavigationStack {
-            Text("People: \(prospects.count)")
-                .navigationTitle(title)
-                .toolbar {
-                    Button("Scan", systemImage: "qrcode.viewfinder") {
-                        let prospect = Prospect(name: "Paul Hudson", emailAddress: "paul@hackingwithswift.com", isContacted: false)
-                        modelContext.insert(prospect)
-                    }
+            List(prospects) { prospect in
+                VStack(alignment: .leading) {
+                    Text(prospect.name)
+                        .font(.headline)
+                    Text(prospect.emailAddress)
+                        .foregroundStyle(.secondary)
                 }
+            }
         }
     }
 }
