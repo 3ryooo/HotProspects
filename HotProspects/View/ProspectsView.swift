@@ -49,8 +49,13 @@ struct ProspectsView: View {
         NavigationStack {
             List(prospects, selection: $selectedProspects) { prospect in
                 VStack(alignment: .leading) {
-                    Text(prospect.name)
-                        .font(.headline)
+                    HStack {
+                        Text(prospect.name)
+                            .font(.headline)
+                        if prospect.isContacted {
+                            Image(systemName: "person.crop.circle.badge.checkmark")
+                        }
+                    }
                     Text(prospect.emailAddress)
                         .foregroundStyle(.secondary)
                 }
