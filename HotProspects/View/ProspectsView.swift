@@ -48,17 +48,22 @@ struct ProspectsView: View {
     var body: some View {
         NavigationStack {
             List(prospects, selection: $selectedProspects) { prospect in
-                VStack(alignment: .leading) {
-                    HStack {
-                        Text(prospect.name)
-                            .font(.headline)
-                        if prospect.isContacted {
-                            Image(systemName: "person.crop.circle.badge.checkmark")
+                NavigationLink {
+                    EditView(prospect: prospect)
+                } label: {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text(prospect.name)
+                                .font(.headline)
+                            if prospect.isContacted {
+                                Image(systemName: "person.crop.circle.badge.checkmark")
+                            }
                         }
+                        Text(prospect.emailAddress)
+                            .foregroundStyle(.secondary)
                     }
-                    Text(prospect.emailAddress)
-                        .foregroundStyle(.secondary)
                 }
+                
                 .swipeActions {
                     Button("Delete", systemImage: "trash", role: .destructive) {
                         modelContext.delete(prospect)
