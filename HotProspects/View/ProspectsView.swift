@@ -23,10 +23,13 @@ struct ProspectsView: View {
     
     @State private var isShowingScanner = false
     @State private var selectedProspects = Set<Prospect>()
+    @State private var sortOrder = [
+        SortDescriptor(\Prospect.name)
+    ]
     
     let filter: FilterType
     
-    @Query(sort: \Prospect.name) var prospects: [Prospect]
+    @Query var prospects: [Prospect]
     @Environment(\.modelContext) var modelContext
     
     init(filter: FilterType) {
@@ -37,7 +40,7 @@ struct ProspectsView: View {
             
             _prospects = Query(filter: #Predicate {
                 $0.isContacted == showContactedOnly
-            }, sort: [SortDescriptor(\Prospect.name)])
+            }, sort: sortOrder)
         }
     }
     
@@ -47,7 +50,7 @@ struct ProspectsView: View {
     
     var body: some View {
         NavigationStack {
-            List(prospects, selection: $selectedProspects) { prospect in
+            List(prospects.sorted(using: sortOrder), selection: $selectedProspects) { prospect in
                 NavigationLink {
                     EditView(prospect: prospect)
                 } label: {
@@ -90,11 +93,26 @@ struct ProspectsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     EditButton()
+                    
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Scan", systemImage: "qrcode.viewfinder") {
                         isShowingScanner = true
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu("Sort", systemImage: "arrow.up.arrow.down") {
+                        Picker("Sort", selection: $sortOrder) {
+                            Text("Sort by name")
+                                .tag([
+                                    SortDescriptor(\Prospect.name)
+                                ])
+                            Text("Sort by Date")
+                                .tag([
+                                    SortDescriptor(\Prospect.createdAt)
+                                ])
+                        }
                     }
                 }
                 if selectedProspects.isEmpty == false {
@@ -116,9 +134,10 @@ struct ProspectsView: View {
             let details = result.string.components(separatedBy: "\n")
             guard details.count == 2 else { return }
             
-            let person = Prospect(name: details[0], emailAddress: details[1], isContacted: false)
+            let person = Prospect(name: details[0], emailAddress: details[1], isContacted: false, createdAt: .now)
             
             modelContext.insert(person)
+            
         case .failure(let error):
             print("Scanning failed: \(error.localizedDescription)")
         }
